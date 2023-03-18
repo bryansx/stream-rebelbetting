@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import time
+from datetime import datetime, timedelta
 import re
 
 
@@ -33,7 +34,7 @@ class ScrapRebelBetting:
         self.add_input(by=By.ID, value='inputPassword', text=password)
         self.click_button(by=By.CLASS_NAME, value='mt-3.btn.btn-primary.btn-block')
 
-    def get_all_bets_ids(self):
+    def get_all_bets_ids(self) -> list:
 
         source_code = self.browser.page_source
         bets_ids = []
@@ -50,7 +51,7 @@ class ScrapRebelBetting:
 
         return bets_ids
 
-    def get_bet_info(self, bet_id: str):
+    def get_bet_info(self, bet_id: str) -> dict:
 
         info = {}
 
@@ -71,3 +72,44 @@ class ScrapRebelBetting:
         self.click_button(by=By.ID, value='CloseSelectedCard')
 
         return info
+
+    @staticmethod
+    def filter_per_date(bet_info) -> bool:
+        """
+
+        :param bet_info:
+        :return: True if match begins in less than 4h, else False
+        """
+
+        start_in = bet_info['start']
+
+        if 'minutes' in start_in or 'seconds' in start_in:
+            return True
+
+        elif 'hours' in start_in:
+            nb_hours = int(start_in.split()[2])
+            if nb_hours <= 4:
+                return True
+
+        else:
+            return False
+
+    @staticmethod
+    def filter_basket(bet_info) -> bool:
+        """
+
+        :param bet_info:
+        :return: True if not basket or over under, else False
+        """
+
+        if bet_info['oddstype'] == 'Over/under overtime included':
+            return True
+
+        if bet_info['sport'] == 'Basketball':
+            return False
+        else:
+            return True
+
+
+
+

@@ -31,7 +31,7 @@ class TelegramBOT:
                       f"*Odds type*: {bet_info['oddstype']}\n" \
                       f"*Value*: {bet_info['Value']}%\n" \
                       f"*Bookmaker*: {bet_info['bookmaker']}\n" \
-                      f"*Link*: {bet_info['url']}\n" \
-                      f"{bet_info['start']}\n"
+                      f"*Start*: {bet_info['start']}\n" \
+                      f"*Link*: {bet_info['url']}\n"
 
         self.telegram_bot_send_text(bot_message=bot_message)

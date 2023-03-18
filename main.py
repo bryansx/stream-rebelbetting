@@ -46,8 +46,11 @@ if __name__ == '__main__':
                         bet_info = rebel_website.get_bet_info(bet_id=bet_id)
                         print(bet_info)
 
-                        # Send bet on telegram
-                        telegram_bot.send_bet(bet_info=bet_info)
+                        if rebel_website.filter_basket(bet_info=bet_info) \
+                                and rebel_website.filter_per_date(bet_info=bet_info):
+
+                            # Send bet on telegram
+                            telegram_bot.send_bet(bet_info=bet_info)
 
                         # make sure that we didn't already send this bet
                         sent_bets.append(bet_id)
@@ -57,5 +60,5 @@ if __name__ == '__main__':
 
         except Exception as e:
             # If script crashes, just wait for 120 seconds and re-run the bot
-            print(f"Bot crashed... It will restart automatically in 120s")
-            time.sleep(120)
+            print(f"Bot crashed... It will restart automatically in 60s")
+            time.sleep(60)
