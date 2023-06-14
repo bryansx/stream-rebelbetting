@@ -1,4 +1,5 @@
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 import time
@@ -13,7 +14,7 @@ class ScrapRebelBetting:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
 
-        self.browser = webdriver.Chrome(options=chrome_options)
+        self.browser = webdriver.Chrome("/usr/bin/chromedriver", options=chrome_options)
         self.browser.get("https://vb.rebelbetting.com/login")
 
     def close_browser(self):
@@ -73,6 +74,24 @@ class ScrapRebelBetting:
 
         return info
 
+    def check_connection(self):
+
+        source_code = self.browser.page_source
+
+        if "Click here to try and reconnect." in source_code:
+            print("Disconnected")
+
+            self.click_button(by=By.CLASS_NAME, value='badge.badge-danger.m-2.p-2.clickable')
+
+            time.sleep(3)
+
+            source_code = self.browser.page_source
+            if "Click here to try and reconnect." in source_code:
+                raise Exception("Failed to reconnect")
+
+            else:
+                print("Reconnected")
+
     @staticmethod
     def filter_per_date(bet_info) -> bool:
         """
@@ -94,21 +113,53 @@ class ScrapRebelBetting:
         else:
             return False
 
-    @staticmethod
-    def filter_basket(bet_info) -> bool:
+    def filter_basket(self, bet_info) -> bool:
         """
 
         :param bet_info:
         :return: True if not basket or over under, else False
         """
 
+        in_less_than_4h = self.filter_per_date(bet_info=bet_info)
+
         if bet_info['oddstype'] == 'Over/under overtime included':
-            return True
+            if bet_info['sport'] == 'Basketball' and not in_less_than_4h:
+                return False
+            elif bet_info['sport'] == 'Basketball' and in_less_than_4h:
+                return True
 
         if bet_info['sport'] == 'Basketball':
-            return False
+
+            if bet_info['oddstype'] == 'Over/under overtime included' and not in_less_than_4h:
+                return True
+
+            elif in_less_than_4h:
+                return True
+
+            else:
+                return False
+
         else:
             return True
+
+    def filter_odds(self, bet_info) -> bool:
+
+        if float(bet_info['odds']) > 2.3 and \
+                (("Over/under" in bet_info['oddstype']) or ("Asian handicap" in bet_info['oddstype'])):
+            return False
+
+        else:
+            return True
+
+    def close_ad(self):
+
+        try:
+            self.browser.switch_to.frame(0)
+            self.browser.find_element(by=By.ID, value="Rectangle-4-copy").click()
+
+        except:
+            # No iFrame => no add
+            return None
 
 
 
